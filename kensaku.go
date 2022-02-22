@@ -10,8 +10,6 @@ type Operator = query.Operator
 
 func Parse(str string) (q query.Query, ok bool) {
 	tks := make(chan internal.Token)
-	defer close(tks)
-
 	l := internal.NewLexer(str, tks)
 
 	go l.Lex()
