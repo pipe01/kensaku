@@ -59,12 +59,17 @@ func (l *Lexer) Lex() {
 
 func (l *Lexer) putToken(tk Token) {
 	l.putString()
-	l.ch <- tk
+
+	tk.Content = strings.TrimSpace(tk.Content)
+	if len(tk.Content) > 0 {
+		l.ch <- tk
+	}
 }
 
 func (l *Lexer) putString() {
-	if l.textb.Len() > 0 {
-		l.ch <- Token{TokenText, l.textb.String()}
+	str := strings.TrimSpace(l.textb.String())
+	if len(str) > 0 {
+		l.ch <- Token{TokenText, str}
 		l.textb.Reset()
 	}
 }
