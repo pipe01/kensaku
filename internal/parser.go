@@ -1,6 +1,10 @@
 package internal
 
-import "github.com/pipe01/kensaku/query"
+import (
+	"strings"
+
+	"github.com/pipe01/kensaku/query"
+)
 
 type TokenStream <-chan Token
 
@@ -26,8 +30,10 @@ func (ts TokenStream) TakeEither(typa, typb TokenType) (Token, bool) {
 
 func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
 	ops := make([]query.Operator, 0)
+	var textop *textOperator
 
 	for tk := range tokens {
+
 		switch tk.Type {
 		case TokenQuoted:
 			ops = append(ops, &textOperator{text: tk.Content, exact: true})
@@ -40,10 +46,16 @@ func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
 			ops = append(ops, op)
 
 		default:
-			ops = append(ops, &textOperator{text: tk.Content, exact: false})
+			if textop == nil {
+				textop = &textOperator{text: tk.Content, exact: false}
+				ops = append(ops, textop)
+			} else {
+				textop.text = strings.Join([]string{textop.text, tk.Content}, " ")
+			}
 		}
 	}
 
+	println("exited")
 	return ops, true
 }
 
