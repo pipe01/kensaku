@@ -54,6 +54,7 @@ func (l *Lexer) Lex() {
 		l.pos++
 	}
 
+	l.putString()
 	close(l.ch)
 }
 
