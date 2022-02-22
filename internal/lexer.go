@@ -41,6 +41,9 @@ func NewLexer(str string, ch chan<- Token) *Lexer {
 }
 
 func (l *Lexer) Lex() {
+	defer close(l.ch)
+	defer l.putString()
+
 	for l.pos < len(l.str) {
 		c := l.str[l.pos]
 
@@ -79,9 +82,6 @@ func (l *Lexer) Lex() {
 
 		l.pos++
 	}
-
-	l.putString()
-	close(l.ch)
 }
 
 func (l *Lexer) putToken(tk Token) {
