@@ -13,9 +13,16 @@ const (
 	TokenNone TokenType = iota
 	TokenText
 	TokenQuoted
+
 	TokenOpenParen
 	TokenCloseParen
 	TokenColon
+
+	TokenEquals
+	TokenGreater
+	TokenGreaterEquals
+	TokenLess
+	TokenLessEquals
 )
 
 type Lexer struct {
@@ -38,15 +45,34 @@ func (l *Lexer) Lex() {
 		c := l.str[l.pos]
 
 		switch c {
+		case '"':
+			l.pos++
+			l.putToken(l.takeQuoted())
+
 		case '(':
 			l.putToken(Token{TokenOpenParen, "("})
 		case ')':
 			l.putToken(Token{TokenCloseParen, ")"})
 		case ':':
 			l.putToken(Token{TokenColon, ":"})
-		case '"':
-			l.pos++
-			l.putToken(l.takeQuoted())
+
+		case '=':
+			l.putToken(Token{TokenEquals, "="})
+		case '>':
+			if l.pos < len(l.str)-1 && l.str[l.pos+1] == '=' {
+				l.putToken(Token{TokenGreaterEquals, ">="})
+				l.pos++
+			} else {
+				l.putToken(Token{TokenGreater, ">"})
+			}
+		case '<':
+			if l.pos < len(l.str)-1 && l.str[l.pos+1] == '=' {
+				l.putToken(Token{TokenLessEquals, "<="})
+				l.pos++
+			} else {
+				l.putToken(Token{TokenLess, "<"})
+			}
+
 		default:
 			l.textb.WriteByte(c)
 		}

@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/pipe01/kensaku/query"
@@ -18,14 +19,16 @@ func (ts TokenStream) Take(typ TokenType) (Token, bool) {
 	return tk, true
 }
 
-func (ts TokenStream) TakeEither(typa, typb TokenType) (Token, bool) {
+func (ts TokenStream) TakeAny(typ ...TokenType) (Token, bool) {
 	tk := <-ts
 
-	if tk.Type != typa && tk.Type != typb {
-		return Token{}, false
+	for _, t := range typ {
+		if tk.Type == t {
+			return tk, true
+		}
 	}
 
-	return tk, true
+	return Token{}, false
 }
 
 func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
@@ -33,7 +36,6 @@ func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
 	var textop *textOperator
 
 	for tk := range tokens {
-
 		switch tk.Type {
 		case TokenQuoted:
 			ops = append(ops, &textOperator{text: tk.Content, exact: true})
@@ -55,7 +57,6 @@ func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
 		}
 	}
 
-	println("exited")
 	return ops, true
 }
 
@@ -65,11 +66,51 @@ func takeOperator(tokench TokenStream) (query.Operator, bool) {
 		return nil, false
 	}
 
-	if _, ok := tokench.Take(TokenColon); !ok {
+	op, ok := tokench.TakeAny(TokenColon, TokenEquals, TokenGreater, TokenGreaterEquals, TokenLess, TokenLessEquals)
+	if !ok {
 		return nil, false
 	}
 
-	value, ok := tokench.TakeEither(TokenText, TokenQuoted)
+	if op.Type == TokenColon {
+		return takeTextOperator(tokench, field.Content)
+	}
+
+	return takeNumberOperator(tokench, op, field.Content)
+}
+
+func takeNumberOperator(tokench TokenStream, op Token, field string) (query.Operator, bool) {
+	valuetk, ok := tokench.Take(TokenText)
+	if !ok {
+		return nil, false
+	}
+
+	n, err := strconv.ParseFloat(valuetk.Content, 64)
+	if err != nil {
+		return nil, false
+	}
+
+	var comp query.NumberComparison
+
+	switch op.Type {
+	case TokenEquals:
+		comp = query.CompareEquals
+	case TokenGreater:
+		comp = query.CompareGreaterThan
+	case TokenGreaterEquals:
+		comp = query.CompareGreaterOrEqual
+	case TokenLess:
+		comp = query.CompareLessThan
+	case TokenLessEquals:
+		comp = query.CompareLessOrEqual
+	default:
+		return nil, false
+	}
+
+	return &numberOperator{field: field, value: n, comp: comp}, true
+}
+
+func takeTextOperator(tokench TokenStream, field string) (query.Operator, bool) {
+	value, ok := tokench.TakeAny(TokenText, TokenQuoted)
 	if !ok {
 		return nil, false
 	}
@@ -79,7 +120,7 @@ func takeOperator(tokench TokenStream) (query.Operator, bool) {
 		return nil, false
 	}
 
-	return &textOperator{field: field.Content, text: value.Content, exact: exact}, true
+	return &textOperator{field: field, text: value.Content, exact: exact}, true
 }
 
 type textOperator struct {
@@ -98,4 +139,22 @@ func (t *textOperator) Text() string {
 
 func (t *textOperator) Exact() bool {
 	return t.exact
+}
+
+type numberOperator struct {
+	field string
+	value float64
+	comp  query.NumberComparison
+}
+
+func (n *numberOperator) Field() string {
+	return n.field
+}
+
+func (n *numberOperator) Value() float64 {
+	return n.value
+}
+
+func (n *numberOperator) Comparison() query.NumberComparison {
+	return n.comp
 }
