@@ -6,6 +6,7 @@ func TestLexer(t *testing.T) {
 	tests := map[string][]Token{
 		"single":             {{TokenText, "single"}},
 		"two words":          {{TokenText, "two words"}},
+		`some "quoted text"`: {{TokenText, "some"}, {TokenQuoted, "quoted text"}},
 		"word = word":        {{TokenText, "word"}, {TokenEquals, "="}, {TokenText, "word"}},
 		"word > 123":         {{TokenText, "word"}, {TokenGreater, ">"}, {TokenText, "123"}},
 		"word >= 123":        {{TokenText, "word"}, {TokenGreaterEquals, ">="}, {TokenText, "123"}},
