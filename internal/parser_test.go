@@ -10,18 +10,18 @@ import (
 
 func TestTakeOperator(t *testing.T) {
 	data := []struct {
-		field string
-		tks   []Token
-		op    Operator
+		tks []Token
+		op  Operator
 	}{
-		{"field", []Token{{TokenText, "field"}, {TokenColon, ":"}, {TokenText, "value"}}, &TextOperator{Field: "field", Text: "value", Exact: false}},
-		{"field", []Token{{TokenText, "field"}, {TokenColon, ":"}, {TokenQuoted, "value"}}, &TextOperator{Field: "field", Text: "value", Exact: true}},
-		{"field", []Token{{TokenText, "field"}, {TokenEquals, "="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareEquals}},
-		{"field", []Token{{TokenText, "field"}, {TokenGreaterEquals, ">="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareGreaterOrEqual}},
-		{"field", []Token{{TokenText, "field"}, {TokenGreater, ">"}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareGreaterThan}},
-		{"field", []Token{{TokenText, "field"}, {TokenLessEquals, "<="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareLessOrEqual}},
-		{"field", []Token{{TokenText, "field"}, {TokenLess, "<"}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareLessThan}},
-		{"field", []Token{{TokenText, "field"}, {TokenOpenParen, "("}, {TokenText, "123.45"}}, nil},
+		{[]Token{{TokenText, "field"}, {TokenColon, ":"}, {TokenText, "value"}}, &TextOperator{Field: "field", Text: "value", Exact: false}},
+		{[]Token{{TokenText, "field"}, {TokenColon, ":"}, {TokenQuoted, "value"}}, &TextOperator{Field: "field", Text: "value", Exact: true}},
+		{[]Token{{TokenText, "field"}, {TokenEquals, "="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareEquals}},
+		{[]Token{{TokenText, "field"}, {TokenGreaterEquals, ">="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareGreaterOrEqual}},
+		{[]Token{{TokenText, "field"}, {TokenGreater, ">"}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareGreaterThan}},
+		{[]Token{{TokenText, "field"}, {TokenLessEquals, "<="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareLessOrEqual}},
+		{[]Token{{TokenText, "field"}, {TokenLess, "<"}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareLessThan}},
+		{[]Token{{TokenText, "field"}, {TokenOpenParen, "("}, {TokenText, "123.45"}}, nil},
+		{[]Token{{TokenText, ""}, {TokenColon, ":"}, {TokenText, "123.45"}}, nil},
 	}
 
 	for i, d := range data {

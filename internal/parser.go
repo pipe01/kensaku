@@ -67,7 +67,7 @@ func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
 
 func takeOperator(tokench TokenStream) (query.Operator, bool) {
 	field, ok := tokench.Take(TokenText)
-	if !ok {
+	if !ok || field.Content == "" {
 		return nil, false
 	}
 
