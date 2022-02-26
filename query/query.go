@@ -3,13 +3,7 @@ package query
 type Query []Operator
 
 type Operator interface {
-	Field() string
-}
-
-type TextOperator interface {
-	Operator
-	Text() string
-	Exact() bool
+	operator()
 }
 
 type NumberComparison byte
@@ -22,8 +16,18 @@ const (
 	CompareGreaterOrEqual
 )
 
-type NumberOperator interface {
-	Operator
-	Value() float64
-	Comparison() NumberComparison
+type TextOperator struct {
+	Field string
+	Text  string
+	Exact bool
 }
+
+func (t *TextOperator) operator() {}
+
+type NumberOperator struct {
+	Field      string
+	Value      float64
+	Comparison NumberComparison
+}
+
+func (t *NumberOperator) operator() {}

@@ -33,12 +33,12 @@ func (ts TokenStream) TakeAny(typ ...TokenType) (Token, bool) {
 
 func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
 	ops := make([]query.Operator, 0)
-	var textop *textOperator
+	var textop *query.TextOperator
 
 	for tk := range tokens {
 		switch tk.Type {
 		case TokenQuoted:
-			ops = append(ops, &textOperator{text: tk.Content, exact: true})
+			ops = append(ops, &query.TextOperator{Text: tk.Content, Exact: true})
 
 		case TokenOpenParen:
 			op, ok := takeOperator(tokens)
@@ -54,10 +54,10 @@ func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
 
 		default:
 			if textop == nil {
-				textop = &textOperator{text: tk.Content, exact: false}
+				textop = &query.TextOperator{Text: tk.Content, Exact: false}
 				ops = append(ops, textop)
 			} else {
-				textop.text = strings.Join([]string{textop.text, tk.Content}, " ")
+				textop.Text = strings.Join([]string{textop.Text, tk.Content}, " ")
 			}
 		}
 	}
@@ -91,7 +91,7 @@ func takeOperator(tokench TokenStream) (query.Operator, bool) {
 	return op, true
 }
 
-func takeNumberOperator(tokench TokenStream, op Token, field string) (*numberOperator, bool) {
+func takeNumberOperator(tokench TokenStream, op Token, field string) (*query.NumberOperator, bool) {
 	valuetk, ok := tokench.Take(TokenText)
 	if !ok {
 		return nil, false
@@ -115,55 +115,17 @@ func takeNumberOperator(tokench TokenStream, op Token, field string) (*numberOpe
 		comp = query.CompareLessThan
 	case TokenLessEquals:
 		comp = query.CompareLessOrEqual
-	default:
-		return nil, false
 	}
 
-	return &numberOperator{field: field, value: n, comp: comp}, true
+	return &query.NumberOperator{Field: field, Value: n, Comparison: comp}, true
 }
 
-func takeTextOperator(tokench TokenStream, field string) (*textOperator, bool) {
+func takeTextOperator(tokench TokenStream, field string) (*query.TextOperator, bool) {
 	value, ok := tokench.TakeAny(TokenText, TokenQuoted)
 	if !ok {
 		return nil, false
 	}
 	exact := value.Type == TokenQuoted
 
-	return &textOperator{field: field, text: value.Content, exact: exact}, true
-}
-
-type textOperator struct {
-	field string
-	text  string
-	exact bool
-}
-
-func (t *textOperator) Field() string {
-	return t.field
-}
-
-func (t *textOperator) Text() string {
-	return t.text
-}
-
-func (t *textOperator) Exact() bool {
-	return t.exact
-}
-
-type numberOperator struct {
-	field string
-	value float64
-	comp  query.NumberComparison
-}
-
-func (n *numberOperator) Field() string {
-	return n.field
-}
-
-func (n *numberOperator) Value() float64 {
-	return n.value
-}
-
-func (n *numberOperator) Comparison() query.NumberComparison {
-	return n.comp
+	return &query.TextOperator{Field: field, Text: value.Content, Exact: exact}, true
 }

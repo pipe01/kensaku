@@ -5,18 +5,23 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/pipe01/kensaku/query"
+	. "github.com/pipe01/kensaku/query"
 )
 
 func TestTakeOperator(t *testing.T) {
 	data := []struct {
 		field string
 		tks   []Token
-		op    query.Operator
+		op    Operator
 	}{
-		{"field", []Token{{TokenText, "field"}, {TokenColon, ":"}, {TokenText, "value"}}, &textOperator{field: "field", text: "value", exact: false}},
-		{"field", []Token{{TokenText, "field"}, {TokenColon, ":"}, {TokenQuoted, "value"}}, &textOperator{field: "field", text: "value", exact: true}},
-		{"field", []Token{{TokenText, "field"}, {TokenEquals, "="}, {TokenText, "123.45"}}, &numberOperator{field: "field", value: 123.45, comp: query.CompareEquals}},
+		{"field", []Token{{TokenText, "field"}, {TokenColon, ":"}, {TokenText, "value"}}, &TextOperator{Field: "field", Text: "value", Exact: false}},
+		{"field", []Token{{TokenText, "field"}, {TokenColon, ":"}, {TokenQuoted, "value"}}, &TextOperator{Field: "field", Text: "value", Exact: true}},
+		{"field", []Token{{TokenText, "field"}, {TokenEquals, "="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareEquals}},
+		{"field", []Token{{TokenText, "field"}, {TokenGreaterEquals, ">="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareGreaterOrEqual}},
+		{"field", []Token{{TokenText, "field"}, {TokenGreater, ">"}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareGreaterThan}},
+		{"field", []Token{{TokenText, "field"}, {TokenLessEquals, "<="}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareLessOrEqual}},
+		{"field", []Token{{TokenText, "field"}, {TokenLess, "<"}, {TokenText, "123.45"}}, &NumberOperator{Field: "field", Value: 123.45, Comparison: CompareLessThan}},
+		{"field", []Token{{TokenText, "field"}, {TokenOpenParen, "("}, {TokenText, "123.45"}}, nil},
 	}
 
 	for i, d := range data {
@@ -25,11 +30,14 @@ func TestTakeOperator(t *testing.T) {
 
 			op, ok := takeOperator(TokenStream(tks))
 			if !ok {
+				if d.op == nil {
+					return // We expected a failure
+				}
+
 				t.Fatal("parsing failed")
 			}
-
-			if op.Field() != d.op.Field() {
-				t.Fatalf(`expected field "%s", got "%s"`, d.op.Field(), op.Field())
+			if d.op == nil {
+				t.Fatal("expected a parsing failure")
 			}
 
 			if !reflect.DeepEqual(op, d.op) {
@@ -43,7 +51,7 @@ func TestParseOperators(t *testing.T) {
 	data := []struct {
 		name string
 		tks  []Token
-		ops  []query.Operator
+		ops  []Operator
 	}{
 		{
 			"single operator",
@@ -54,7 +62,7 @@ func TestParseOperators(t *testing.T) {
 				{TokenText, "123.45"},
 				{TokenCloseParen, ")"},
 			},
-			[]query.Operator{&numberOperator{field: "field", value: 123.45, comp: query.CompareEquals}},
+			[]Operator{&NumberOperator{Field: "field", Value: 123.45, Comparison: CompareEquals}},
 		},
 		{
 			"mixed quotes",
@@ -63,9 +71,9 @@ func TestParseOperators(t *testing.T) {
 				{TokenQuoted, "quoted text"},
 				{TokenText, "again not"},
 			},
-			[]query.Operator{
-				&textOperator{field: "", text: "non quoted again not"},
-				&textOperator{field: "", text: "quoted text", exact: true},
+			[]Operator{
+				&TextOperator{Field: "", Text: "non quoted again not"},
+				&TextOperator{Field: "", Text: "quoted text", Exact: true},
 			},
 		},
 		{
@@ -143,16 +151,15 @@ func TestParseOperators(t *testing.T) {
 
 				t.Fatal("parsing failed")
 			}
+			if d.ops == nil {
+				t.Fatal("expected a parsing failure")
+			}
 
 			if len(ops) != len(d.ops) {
 				t.Fatalf("expected %d operators, got %d", len(d.ops), len(ops))
 			}
 
 			for i, op := range ops {
-				if op.Field() != d.ops[i].Field() {
-					t.Fatalf(`expected field "%s", got "%s"`, d.ops[i].Field(), op.Field())
-				}
-
 				if !reflect.DeepEqual(op, d.ops[i]) {
 					t.Fatalf("expected operator %#v, got %#v", d.ops[i], op)
 				}
