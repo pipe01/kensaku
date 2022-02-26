@@ -108,8 +108,11 @@ func (l *Lexer) takeQuoted() Token {
 	for {
 		c := l.str[l.pos]
 
-		if c == '"' || l.pos == len(l.str)-1 {
+		if c == '"' {
 			end = l.pos
+			break
+		} else if l.pos == len(l.str)-1 {
+			end = l.pos + 1
 			break
 		}
 

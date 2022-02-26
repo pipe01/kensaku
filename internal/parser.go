@@ -45,6 +45,11 @@ func ParseOperators(tokens TokenStream) ([]query.Operator, bool) {
 			if !ok {
 				return nil, false
 			}
+
+			if _, ok = tokens.Take(TokenCloseParen); !ok {
+				return nil, false
+			}
+
 			ops = append(ops, op)
 
 		default:
@@ -66,19 +71,27 @@ func takeOperator(tokench TokenStream) (query.Operator, bool) {
 		return nil, false
 	}
 
-	op, ok := tokench.TakeAny(TokenColon, TokenEquals, TokenGreater, TokenGreaterEquals, TokenLess, TokenLessEquals)
+	optk, ok := tokench.TakeAny(TokenColon, TokenEquals, TokenGreater, TokenGreaterEquals, TokenLess, TokenLessEquals)
 	if !ok {
 		return nil, false
 	}
 
-	if op.Type == TokenColon {
-		return takeTextOperator(tokench, field.Content)
+	var op query.Operator
+
+	if optk.Type == TokenColon {
+		op, ok = takeTextOperator(tokench, field.Content)
+	} else {
+		op, ok = takeNumberOperator(tokench, optk, field.Content)
 	}
 
-	return takeNumberOperator(tokench, op, field.Content)
+	if !ok {
+		return nil, false
+	}
+
+	return op, true
 }
 
-func takeNumberOperator(tokench TokenStream, op Token, field string) (query.Operator, bool) {
+func takeNumberOperator(tokench TokenStream, op Token, field string) (*numberOperator, bool) {
 	valuetk, ok := tokench.Take(TokenText)
 	if !ok {
 		return nil, false
@@ -109,16 +122,12 @@ func takeNumberOperator(tokench TokenStream, op Token, field string) (query.Oper
 	return &numberOperator{field: field, value: n, comp: comp}, true
 }
 
-func takeTextOperator(tokench TokenStream, field string) (query.Operator, bool) {
+func takeTextOperator(tokench TokenStream, field string) (*textOperator, bool) {
 	value, ok := tokench.TakeAny(TokenText, TokenQuoted)
 	if !ok {
 		return nil, false
 	}
 	exact := value.Type == TokenQuoted
-
-	if _, ok := tokench.Take(TokenCloseParen); !ok {
-		return nil, false
-	}
 
 	return &textOperator{field: field, text: value.Content, exact: exact}, true
 }

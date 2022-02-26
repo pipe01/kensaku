@@ -4,16 +4,18 @@ import "testing"
 
 func TestLexer(t *testing.T) {
 	tests := map[string][]Token{
-		"single":             {{TokenText, "single"}},
-		"two words":          {{TokenText, "two words"}},
-		`some "quoted text"`: {{TokenText, "some"}, {TokenQuoted, "quoted text"}},
-		"word = word":        {{TokenText, "word"}, {TokenEquals, "="}, {TokenText, "word"}},
-		"word > 123":         {{TokenText, "word"}, {TokenGreater, ">"}, {TokenText, "123"}},
-		"word >= 123":        {{TokenText, "word"}, {TokenGreaterEquals, ">="}, {TokenText, "123"}},
-		"word < 123":         {{TokenText, "word"}, {TokenLess, "<"}, {TokenText, "123"}},
-		"word <= 123":        {{TokenText, "word"}, {TokenLessEquals, "<="}, {TokenText, "123"}},
-		"word = 123":         {{TokenText, "word"}, {TokenEquals, "="}, {TokenText, "123"}},
-		"word (field:value)": {{TokenText, "word"}, {TokenOpenParen, "("}, {TokenText, "field"}, {TokenColon, ":"}, {TokenText, "value"}, {TokenCloseParen, ")"}},
+		"single":                      {{TokenText, "single"}},
+		"two words":                   {{TokenText, "two words"}},
+		`some "quoted text"`:          {{TokenText, "some"}, {TokenQuoted, "quoted text"}},
+		`some "quoted text`:           {{TokenText, "some"}, {TokenQuoted, "quoted text"}},
+		`some "quoted text" and more`: {{TokenText, "some"}, {TokenQuoted, "quoted text"}, {TokenText, "and more"}},
+		"word = word":                 {{TokenText, "word"}, {TokenEquals, "="}, {TokenText, "word"}},
+		"word > 123":                  {{TokenText, "word"}, {TokenGreater, ">"}, {TokenText, "123"}},
+		"word >= 123":                 {{TokenText, "word"}, {TokenGreaterEquals, ">="}, {TokenText, "123"}},
+		"word < 123":                  {{TokenText, "word"}, {TokenLess, "<"}, {TokenText, "123"}},
+		"word <= 123":                 {{TokenText, "word"}, {TokenLessEquals, "<="}, {TokenText, "123"}},
+		"word = 123":                  {{TokenText, "word"}, {TokenEquals, "="}, {TokenText, "123"}},
+		"word (field:value)":          {{TokenText, "word"}, {TokenOpenParen, "("}, {TokenText, "field"}, {TokenColon, ":"}, {TokenText, "value"}, {TokenCloseParen, ")"}},
 	}
 
 	for str, exptks := range tests {
